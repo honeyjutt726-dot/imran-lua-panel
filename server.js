@@ -6,31 +6,55 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 
 const app = express();
+
+// Middleware (JSON aur Form-Data dono support karne ke liye)
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Lua script ki form request ke liye zaroori hai
 app.use(cors());
 app.use(express.static(__dirname)); 
 
 const db = new sqlite3.Database('./panel.db');
 
 // ==========================================
-// SECURITY CONFIGURATION
+// CONFIGURATION
 // ==========================================
 const JWT_SECRET = "imran_super_secret_key_2099"; 
-const MASTER_ACCESS_KEY = "IMRAN-VIP"; // <--- YAHAN APNI LOGIN KEY SET KARO
+const MASTER_ACCESS_KEY = "IMRAN-VIP"; // Web panel login key
 
-// Login Route
-app.post('/api/login', (req, res) => {
-    const { key } = req.body;
-    if (key === MASTER_ACCESS_KEY) {
-        // Token banega jo 30 din tak valid rahega
-        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '30d' });
-        res.json({ success: true, token });
-    } else {
-        res.status(401).json({ success: false, error: "Invalid Access Key" });
-    }
+// ==========================================
+// DATABASE SETUP
+// ==========================================
+db.serialize(() => {
+    // Users Table
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        balance REAL DEFAULT 2147483648,
+        role TEXT DEFAULT 'RESELLER',
+        status TEXT DEFAULT 'ACTIVE',
+        account_expires_at DATETIME DEFAULT '2099-01-12 03:17:04'
+    )`);
+
+    // Licenses Table
+    db.run(`CREATE TABLE IF NOT EXISTS licenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        game TEXT,
+        license_key TEXT UNIQUE,
+        max_devices INTEGER,
+        duration_hours INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        expires_at DATETIME,
+        hwid TEXT
+    )`);
+
+    // Default User create karo
+    db.run(`INSERT OR IGNORE INTO users (id, username, balance, role, status) VALUES (1, 'imranxjutt', 2147483648, 'RESELLER', 'ACTIVE')`);
 });
 
-// Middleware: Har API request se pehle token check karega
+// ==========================================
+// AUTHENTICATION MIDDLEWARE (Web Panel Ke Liye)
+// ==========================================
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
@@ -45,35 +69,21 @@ function authenticateToken(req, res, next) {
 }
 
 // ==========================================
-// DATABASE SETUP
+// WEB PANEL ROUTES
 // ==========================================
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        balance REAL DEFAULT 2147483648,
-        role TEXT DEFAULT 'RESELLER',
-        status TEXT DEFAULT 'ACTIVE',
-        account_expires_at DATETIME DEFAULT '2099-01-12 03:17:04'
-    )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS licenses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        game TEXT,
-        license_key TEXT UNIQUE,
-        max_devices INTEGER,
-        duration_hours INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        expires_at DATETIME
-    )`);
-
-    db.run(`INSERT OR IGNORE INTO users (id, username, balance, role, status) VALUES (1, 'imranxjutt', 2147483648, 'RESELLER', 'ACTIVE')`);
+// 1. Login Route
+app.post('/api/login', (req, res) => {
+    const { key } = req.body;
+    if (key === MASTER_ACCESS_KEY) {
+        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ success: true, token });
+    } else {
+        res.status(401).json({ success: false, error: "Invalid Access Key" });
+    }
 });
 
-// ==========================================
-// PROTECTED API ROUTES (Sirf login hone par chalenge)
-// ==========================================
+// 2. Generate Key (Protected)
 app.post('/api/generate', authenticateToken, (req, res) => {
     const { game, max_devices, duration_hours, price } = req.body;
     const userId = 1; 
@@ -96,12 +106,14 @@ app.post('/api/generate', authenticateToken, (req, res) => {
     });
 });
 
+// 3. Get User Info (Protected)
 app.get('/api/user', authenticateToken, (req, res) => {
     db.get(`SELECT username, balance, role, status, account_expires_at FROM users WHERE id = 1`, [], (err, row) => {
         res.json(row);
     });
 });
 
+// 4. Get Stats (Protected)
 app.get('/api/stats', authenticateToken, (req, res) => {
     const now = new Date().toISOString();
     db.get(`SELECT COUNT(*) as total FROM licenses WHERE user_id = 1`, [], (err, totalRow) => {
@@ -120,6 +132,7 @@ app.get('/api/stats', authenticateToken, (req, res) => {
     });
 });
 
+// 5. Get All Keys (Protected)
 app.get('/api/keys', authenticateToken, (req, res) => {
     const now = new Date().toISOString();
     db.all(`SELECT *, CASE WHEN expires_at > ? THEN 'ACTIVE' ELSE 'INACTIVE' END as status FROM licenses WHERE user_id = 1 ORDER BY id DESC`, [now], (err, rows) => {
@@ -128,6 +141,45 @@ app.get('/api/keys', authenticateToken, (req, res) => {
     });
 });
 
+// ==========================================
+// LUA SCRIPT AUTHENTICATION ROUTE
+// ==========================================
+// Ye route tumhari `IMRAN_SERVER_AUTH_EXTRACT.lua` file se connect hoga
+app.post('/api/auth', (req, res) => {
+    const { user_key, hwid } = req.body; // Form-urlencoded data
+    
+    if (!user_key) {
+        return res.send("FAIL|Key is missing");
+    }
+
+    const now = new Date().toISOString();
+    
+    // Check database for the key
+    db.get(`SELECT * FROM licenses WHERE license_key = ? AND expires_at > ?`, [user_key, now], (err, row) => {
+        if (err) return res.send("FAIL|Database Error");
+        
+        if (row) {
+            // HWID logic (Agar future mein lock karna ho toh yahan hwid save kar sakte ho)
+            if(!row.hwid || row.hwid === "") {
+                db.run(`UPDATE licenses SET hwid = ? WHERE license_key = ?`, [hwid, user_key]);
+            }
+            
+            // Calculate remaining days
+            const expiryDate = new Date(row.expires_at);
+            const daysRemaining = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+            
+            // Lua script expects exactly this format: OK|days
+            return res.send(`OK|${daysRemaining}`);
+        } else {
+            // Key invalid or expired
+            return res.send("FAIL|Invalid or Expired Key");
+        }
+    });
+});
+
+// ==========================================
+// START SERVER
+// ==========================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
