@@ -15,7 +15,9 @@ db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
-        balance REAL DEFAULT 2147482178
+        balance REAL DEFAULT 2147482178,
+        role TEXT DEFAULT 'RESELLER',
+        status TEXT DEFAULT 'ACTIVE'
     )`);
 
     db.run(`CREATE TABLE IF NOT EXISTS licenses (
@@ -24,20 +26,24 @@ db.serialize(() => {
         game TEXT,
         license_key TEXT UNIQUE,
         max_devices INTEGER,
-        duration TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        duration_hours INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        expires_at DATETIME
     )`);
 
-    // User ka naam Imran kar diya hai
-    db.run(`INSERT OR IGNORE INTO users (id, username, balance) VALUES (1, 'Imran', 2147482178)`);
+    db.run(`INSERT OR IGNORE INTO users (id, username, balance, role, status) VALUES (1, 'imranxjutt', 2147482178, 'RESELLER', 'ACTIVE')`);
 });
 
+// Generate Key API
 app.post('/api/generate', (req, res) => {
-    const { game, max_devices, duration, price } = req.body;
+    const { game, max_devices, duration_hours, price } = req.body;
     const userId = 1; 
 
-    // Key format: IMRAN-XX-XX-XX
+    // Key Format: IMRAN-XXXX-XXXX-XXXX
     const key = `IMRAN-${crypto.randomBytes(2).toString('hex').toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+
+    const now = new Date();
+    const expiry = new Date(now.getTime() + (duration_hours * 60 * 60 * 1000));
 
     db.get(`SELECT balance FROM users WHERE id = ?`, [userId], (err, user) => {
         if (user.balance < price) return res.status(400).json({ error: "Insufficient balance" });
@@ -45,17 +51,40 @@ app.post('/api/generate', (req, res) => {
         const newBalance = user.balance - price;
         db.run(`UPDATE users SET balance = ? WHERE id = ?`, [newBalance, userId]);
 
-        db.run(`INSERT INTO licenses (user_id, game, license_key, max_devices, duration) VALUES (?, ?, ?, ?, ?)`, 
-        [userId, game, key, max_devices, duration], function(err) {
+        db.run(`INSERT INTO licenses (user_id, game, license_key, max_devices, duration_hours, expires_at) VALUES (?, ?, ?, ?, ?, ?)`, 
+        [userId, game, key, max_devices, duration_hours, expiry.toISOString()], function(err) {
             if (err) return res.status(500).json({ error: "Key generation failed" });
             res.json({ success: true, key: key, new_balance: newBalance });
         });
     });
 });
 
+// User Info API
 app.get('/api/user', (req, res) => {
-    db.get(`SELECT username, balance FROM users WHERE id = 1`, [], (err, row) => {
+    db.get(`SELECT username, balance, role, status FROM users WHERE id = 1`, [], (err, row) => {
         res.json(row);
+    });
+});
+
+// Stats API
+app.get('/api/stats', (req, res) => {
+    const now = new Date().toISOString();
+    db.get(`SELECT COUNT(*) as total FROM licenses WHERE user_id = 1`, [], (err, totalRow) => {
+        db.get(`SELECT COUNT(*) as active FROM licenses WHERE user_id = 1 AND expires_at > ?`, [now], (err, activeRow) => {
+            res.json({
+                total: totalRow ? totalRow.total : 0,
+                active: activeRow ? activeRow.active : 0
+            });
+        });
+    });
+});
+
+// Get All Keys API
+app.get('/api/keys', (req, res) => {
+    const now = new Date().toISOString();
+    db.all(`SELECT *, CASE WHEN expires_at > ? THEN 'ACTIVE' ELSE 'EXPIRED' END as status FROM licenses WHERE user_id = 1 ORDER BY id DESC`, [now], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
     });
 });
 
