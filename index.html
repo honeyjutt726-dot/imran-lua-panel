@@ -3,129 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMRAN SERVER</title>
+    <title>IMRAN VIP PANEL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #11180e 0%, #2a3b24 100%);
+            background-color: #000000;
             min-height: 100vh;
             margin: 0;
-            color: #333;
+            color: #fff;
+            overflow-x: hidden;
         }
-        .glass-panel {
-            background: rgba(243, 244, 246, 0.98);
-            border-radius: 6px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        .form-card {
-            background: #ffffff;
-            border-radius: 6px;
+        
+        /* =========================================
+           MOVING SMOKE BACKGROUND
+        ========================================= */
+        .smoke-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            background-color: #000;
         }
-        .form-header {
-            background: #2d3b24;
-            padding: 14px 20px;
-            color: #a1a1aa;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #1a2412;
-        }
-        .cube-icon {
-            color: #ef4444;
-            font-size: 1.4rem;
-            margin-right: 8px;
-        }
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+
+        .smoke-layer {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            /* Yahan apni image ka link daal sakte ho. Filhaal maine same type ki image lagayi hai */
+            background-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
             background-repeat: no-repeat;
-            background-position: right 1rem top 50%;
-            background-size: 0.65rem auto;
+            opacity: 0.6;
+            mix-blend-mode: screen; /* Colors ko dark background ke sath mix karne ke liye */
         }
-        input[type="number"]::-webkit-inner-spin-button { 
-            -webkit-appearance: none; 
+
+        /* 3 Different Layers with different animations */
+        .smoke-layer:nth-child(1) {
+            animation: smokeFlow1 25s ease-in-out infinite alternate;
         }
+        .smoke-layer:nth-child(2) {
+            animation: smokeFlow2 35s ease-in-out infinite alternate;
+            opacity: 0.4;
+            transform: rotate(180deg) scaleX(-1); /* Alag look dene ke liye flip kiya */
+        }
+        .smoke-layer:nth-child(3) {
+            animation: smokeFlow3 40s ease-in-out infinite alternate;
+            opacity: 0.3;
+        }
+
+        @keyframes smokeFlow1 {
+            0% { transform: scale(1) translate(0, 0); }
+            50% { transform: scale(1.1) translate(2%, -2%); }
+            100% { transform: scale(1.2) translate(-2%, 3%); }
+        }
+
+        @keyframes smokeFlow2 {
+            0% { transform: rotate(180deg) scaleX(-1) scale(1.1) translate(1%, 1%); }
+            50% { transform: rotate(190deg) scaleX(-1) scale(1.3) translate(-2%, -1%); }
+            100% { transform: rotate(170deg) scaleX(-1) scale(1.15) translate(2%, -2%); }
+        }
+
+        @keyframes smokeFlow3 {
+            0% { transform: scale(1.3) translate(-1%, -1%); }
+            50% { transform: scale(1) translate(2%, 2%); }
+            100% { transform: scale(1.2) translate(-2%, -2%); }
+        }
+        /* ========================================= */
+
+        .glass-card {
+            background: rgba(10, 25, 47, 0.4); /* Thoda aur transparent kiya taaki smoke dikhe */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 10;
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+        .neon-border-green {
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            box-shadow: inset 0 0 20px rgba(34, 197, 94, 0.2), 0 0 15px rgba(34, 197, 94, 0.3);
+        }
+        .stat-icon {
+            background: rgba(0, 150, 255, 0.15);
+            border-radius: 12px;
+            padding: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        select, input {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+            -webkit-appearance: none;
+        }
+        select option {
+            background: #05101e;
+            color: #fff;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.3); border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 pb-20">
 
-    <!-- Navbar -->
-    <nav class="flex justify-between items-center mb-6 px-2 max-w-md mx-auto">
-        <div class="flex items-center text-white text-xl font-bold tracking-wide">
-            <span class="cube-icon">◈</span> IMRAN PANEL
+    <!-- Moving Smoke Background -->
+    <div class="smoke-bg">
+        <div class="smoke-layer"></div>
+        <div class="smoke-layer"></div>
+        <div class="smoke-layer"></div>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black/70 z-40 hidden backdrop-blur-sm transition-opacity" onclick="toggleMenu()"></div>
+
+    <!-- Sidebar Menu -->
+    <div id="sidebar" class="fixed top-0 left-0 w-72 h-full bg-[#05101e]/95 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out border-r border-cyan-500/20">
+        <div class="p-5 flex justify-between items-center border-b border-white/10">
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                <span class="text-xl font-bold tracking-wider text-white">IMRAN VIP</span>
+            </div>
+            <button onclick="toggleMenu()" class="text-cyan-400 hover:text-white">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
         </div>
-        <button class="border border-gray-500 rounded p-1.5 text-gray-300 hover:text-white transition">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        
+        <div class="p-5 space-y-4 mt-2">
+            <a href="#" onclick="switchTab('dashboard')" class="flex items-center gap-3 text-white font-medium text-lg hover:text-cyan-400 transition bg-white/5 p-3 rounded-lg">
+                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                Dashboard
+            </a>
+            <a href="#" onclick="switchTab('generate')" class="flex items-center gap-3 text-cyan-400 font-medium text-lg hover:text-cyan-300 transition p-3 rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Generate Key
+            </a>
+            <a href="#" onclick="switchTab('keys')" class="flex items-center gap-3 text-cyan-400 font-medium text-lg hover:text-cyan-300 transition p-3 rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                My Keys
+            </a>
+
+            <div class="pt-6 border-t border-white/10 flex items-center justify-between text-cyan-400 font-medium cursor-pointer mt-6">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-900/50 p-2 rounded-full">
+                        <svg class="w-6 h-6 text-cyan-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <div>
+                        <span id="sidebarUsername" class="block text-white">Loading...</span>
+                        <span class="text-xs text-gray-400">Balance: $<span id="sidebarBalance">0</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <nav class="flex justify-between items-center mb-6 px-1 max-w-md mx-auto relative z-10">
+        <div class="flex items-center text-white text-xl font-extrabold tracking-widest">
+            <svg class="w-7 h-7 text-cyan-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            IMRAN VIP PANEL
+        </div>
+        <button onclick="toggleMenu()" class="text-cyan-400 p-1">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
     </nav>
 
-    <div class="max-w-md mx-auto space-y-5">
+    <div class="max-w-md mx-auto relative z-10">
         
-        <!-- Balance Card -->
-        <div class="glass-panel p-4 flex items-center gap-3 border border-gray-300">
-            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-            <span class="text-gray-700 text-lg font-medium">Total Saldo <span id="saldo" class="font-semibold">...</span></span>
-        </div>
-
-        <!-- Form Card -->
-        <div class="form-card">
-            <div class="form-header flex justify-between items-center">
-                <span class="tracking-wide">Create License</span>
-                <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <div id="tab-dashboard" class="tab-content active space-y-5">
+            <div class="glass-card neon-border-green p-5 relative overflow-hidden flex items-center justify-between">
+                <div>
+                    <p class="text-green-400 text-sm font-semibold mb-1">Welcome back,</p>
+                    <h2 class="text-2xl font-bold text-green-400 neon-text" id="welcomeUsername">...</h2>
+                    <p class="text-gray-300 text-sm mt-1" id="greetingText">Good afternoon! ☀️</p>
+                </div>
+                <div class="flex flex-col items-center justify-center bg-black/30 rounded-full w-16 h-16 border border-white/10 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
+                    <span class="text-cyan-400 text-lg font-bold" id="currentTime">12:00</span>
+                    <span class="text-gray-400 text-xs" id="currentAmPm">PM</span>
+                </div>
             </div>
-            
-            <div class="p-6 space-y-5">
-                <!-- Game -->
-                <div>
-                    <label class="block text-sm text-gray-500 mb-1.5">Game</label>
-                    <select id="game" class="w-full bg-white border border-gray-200 rounded p-3 text-gray-800 font-medium focus:outline-none focus:border-gray-400">
-                        <option value="PUBG MOBILE">PUBG MOBILE</option>
-                        <option value="FREE FIRE">FREE FIRE</option>
-                        <option value="CALL OF DUTY">CALL OF DUTY</option>
-                    </select>
-                </div>
 
-                <!-- Max Devices -->
-                <div>
-                    <label class="block text-sm text-gray-500 mb-1.5">Max Devices</label>
-                    <input type="number" id="maxDevices" value="1" min="1" class="w-full bg-white border border-gray-200 rounded p-3 text-gray-800 font-medium focus:outline-none focus:border-gray-400">
+            <div class="glass-card p-5">
+                <h3 class="text-lg font-bold flex items-center gap-2 mb-1"><span class="text-2xl">👋</span> Welcome back, <span id="dashUsername" class="text-cyan-400">...</span></h3>
+                <p class="text-gray-400 text-sm mb-4">Imran VIP Panel Dashboard</p>
+                
+                <div class="flex gap-3">
+                    <span class="px-3 py-1 rounded-full border border-green-500/50 bg-green-500/10 text-green-400 text-xs font-bold flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        <span id="userStatus">ACTIVE</span>
+                    </span>
+                    <span class="px-3 py-1 rounded-full border border-pink-500/50 bg-pink-500/10 text-pink-400 text-xs font-bold flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <span id="userRole">RESELLER</span>
+                    </span>
                 </div>
+            </div>
 
-                <!-- Duration -->
-                <div>
-                    <label class="block text-sm text-gray-500 mb-1.5">Duration</label>
-                    <select id="duration" class="w-full bg-white border border-gray-200 rounded p-3 text-gray-800 font-medium focus:outline-none focus:border-gray-400">
-                        <option value="5 Hours" data-price="0.1">5 Hours — $0.1/Device</option>
-                        <option value="1 Day" data-price="0.5">1 Day — $0.5/Device</option>
-                        <option value="30 Days" data-price="4.0">30 Days — $4/Device</option>
-                        <option value="60 Days" data-price="8.0">60 Days — $8/Device</option>
-                    </select>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 flex flex-col items-center justify-center text-center">
+                    <div class="stat-icon mb-2">
+                        <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white" id="totalKeys">0</h2>
+                    <p class="text-gray-400 text-xs mt-1">Total Keys</p>
                 </div>
-
-                <button onclick="generateKey()" id="genBtn" class="w-full bg-[#1a2412] hover:bg-[#2d3b24] text-white font-semibold py-3.5 rounded transition duration-200 mt-2 shadow-md">
-                    Generate Keys
-                </button>
+                <div class="glass-card p-4 flex flex-col items-center justify-center text-center">
+                    <div class="stat-icon mb-2 border border-green-500/30 bg-green-500/10">
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white" id="activeKeys">0</h2>
+                    <p class="text-gray-400 text-xs mt-1">Active Keys</p>
+                </div>
             </div>
         </div>
 
-        <!-- Output Area -->
-        <div id="resultBox" class="glass-panel p-5 hidden border border-gray-300">
-            <p class="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Generated License Key</p>
-            <p id="keyText" class="text-lg font-mono text-green-700 font-bold break-all bg-green-50 p-3 rounded border border-green-200"></p>
+        <!-- ================= TAB 2: GENERATE ================= -->
+        <div id="tab-generate" class="tab-content space-y-5">
+            <div class="glass-card p-5">
+                <h3 class="text-sm font-bold text-cyan-400 mb-4 uppercase tracking-wider border-b border-white/10 pb-2 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Create New Key
+                </h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Game</label>
+                        <select id="game" class="w-full rounded-lg p-3 text-sm focus:outline-none focus:border-cyan-400">
+                            <option value="PUBG MOBILE">PUBG MOBILE</option>
+                            <option value="FREE FIRE">FREE FIRE</option>
+                            <option value="CALL OF DUTY">CALL OF DUTY</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Max Devices</label>
+                        <input type="number" id="maxDevices" value="1" min="1" class="w-full rounded-lg p-3 text-sm focus:outline-none focus:border-cyan-400">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Duration</label>
+                        <select id="duration" class="w-full rounded-lg p-3 text-sm focus:outline-none focus:border-cyan-400">
+                            <option value="1" data-price="0.1">1 Hour — $0.10 / Dev</option>
+                            <option value="24" data-price="1.0">1 Day — $1.00 / Dev</option>
+                            <option value="168" data-price="5.0">1 Week — $5.00 / Dev</option>
+                            <option value="720" data-price="15.0">30 Days — $15.00 / Dev</option>
+                            <option value="8760" data-price="100.0">365 Days — $100.00 / Dev</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-2">
+                        <p class="text-sm text-gray-400 mb-2">Total Price: <span id="totalPrice" class="text-cyan-400 font-bold text-lg">$0.10</span></p>
+                        <button onclick="generateKey()" id="genBtn" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-lg transition shadow-[0_0_15px_rgba(8,145,178,0.5)]">
+                            Generate Key Now
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- ================= TAB 3: KEYS ================= -->
+        <div id="tab-keys" class="tab-content space-y-5">
+            <div class="glass-card p-5">
+                <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                    <h3 class="text-sm font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        My Keys
+                    </h3>
+                    <button onclick="loadHistory()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Refresh
+                    </button>
+                </div>
+                
+                <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1" id="keyHistory">
+                    <p class="text-sm text-gray-500 text-center py-2">Loading keys...</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Floating Telegram Button -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <a href="#" class="bg-cyan-500 hover:bg-cyan-400 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.6)] transition">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+        </a>
     </div>
 
     <script>
         const API_URL = window.location.origin; 
 
+        // Time & Greeting Setup
+        function updateTime() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            let greeting = "Good evening! 🌙";
+            if(hours >= 5 && hours < 12) greeting = "Good morning! ☀️";
+            else if(hours >= 12 && hours < 17) greeting = "Good afternoon! 🌤️";
+            
+            document.getElementById('greetingText').innerText = greeting;
+
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            document.getElementById('currentTime').innerText = `${hours}:${minutes}`;
+            document.getElementById('currentAmPm').innerText = ampm;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#sidebar a').forEach(el => {
+                el.classList.remove('bg-white/5', 'text-white');
+                el.classList.add('text-cyan-400');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            const activeLink = document.querySelector(`#sidebar a[onclick="switchTab('${tabName}')"]`);
+            if(activeLink) {
+                activeLink.classList.remove('text-cyan-400');
+                activeLink.classList.add('bg-white/5', 'text-white');
+            }
+
+            if(tabName === 'keys') loadHistory();
+            toggleMenu();
+        }
+
         async function loadUser() {
             try {
                 const res = await fetch(`${API_URL}/api/user`);
                 const data = await res.json();
-                document.getElementById('saldo').innerText = `$${data.balance.toLocaleString()}`;
+                document.getElementById('welcomeUsername').innerText = data.username;
+                document.getElementById('dashUsername').innerText = data.username;
+                document.getElementById('sidebarUsername').innerText = data.username;
+                document.getElementById('sidebarBalance').innerText = data.balance.toLocaleString();
+                document.getElementById('userRole').innerText = data.role;
+                document.getElementById('userStatus').innerText = data.status;
             } catch (e) { console.error("Error loading user"); }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/stats`);
+                const data = await res.json();
+                document.getElementById('totalKeys').innerText = data.total;
+                document.getElementById('activeKeys').innerText = data.active;
+            } catch (e) { console.error("Error loading stats"); }
+        }
+
+        const durationSelect = document.getElementById('duration');
+        const maxDevicesInput = document.getElementById('maxDevices');
+        
+        function updatePrice() {
+            const pricePerDevice = parseFloat(durationSelect.options[durationSelect.selectedIndex].dataset.price);
+            const devices = parseInt(maxDevicesInput.value) || 1;
+            const total = pricePerDevice * devices;
+            document.getElementById('totalPrice').innerText = `$${total.toFixed(2)}`;
+        }
+        
+        durationSelect.addEventListener('change', updatePrice);
+        maxDevicesInput.addEventListener('input', updatePrice);
+
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_URL}/api/keys`);
+                const keys = await res.json();
+                const historyDiv = document.getElementById('keyHistory');
+                
+                if (keys.length === 0) {
+                    historyDiv.innerHTML = `<p class="text-sm text-gray-500 text-center py-4">No keys generated yet.</p>`;
+                    return;
+                }
+
+                historyDiv.innerHTML = keys.map(k => {
+                    const isActive = k.status === 'ACTIVE';
+                    const statusColor = isActive ? 'text-green-400 border-green-500/30' : 'text-red-400 border-red-500/30';
+                    const bgColor = isActive ? 'bg-green-500/10' : 'bg-red-500/10';
+                    
+                    let durationText = `${k.duration_hours} Hours`;
+                    if(k.duration_hours === 24) durationText = '1 Day';
+                    if(k.duration_hours === 168) durationText = '1 Week';
+                    if(k.duration_hours === 720) durationText = '30 Days';
+                    if(k.duration_hours === 8760) durationText = '365 Days';
+                    
+                    const keyId = k.license_key.replace(/-/g, '');
+
+                    return `
+                    <div class="border border-white/10 rounded-lg p-3 bg-[#05101e]/50 relative overflow-hidden group">
+                        <div class="absolute left-0 top-0 h-full w-1 ${isActive ? 'bg-green-500' : 'bg-red-500'}"></div>
+                        <div class="pl-2 flex justify-between items-center">
+                            <div class="flex-1 min-w-0 pr-2">
+                                <p class="text-xs text-gray-300 font-bold mb-1 flex items-center gap-2">
+                                    ${k.game} 
+                                    <span class="text-gray-500 font-normal">(${durationText})</span>
+                                </p>
+                                <p class="font-mono text-cyan-400 text-sm font-semibold truncate" id="key-${keyId}">${k.license_key}</p>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-[10px] px-2 py-0.5 rounded border ${statusColor} ${bgColor} font-bold block mb-1">${k.status}</span>
+                                <span class="text-[10px] text-gray-500 block mb-1">${k.max_devices} Dev</span>
+                                <button onclick="copyKey('${k.license_key}', event)" class="text-[10px] bg-cyan-600/30 text-cyan-300 px-2 py-1 rounded hover:bg-cyan-600/60 transition">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            } catch (e) { 
+                console.error("Error loading history"); 
+            }
+        }
+
+        function copyKey(key, event) {
+            navigator.clipboard.writeText(key).then(() => {
+                const btn = event.target;
+                const originalText = btn.innerText;
+                btn.innerText = "Copied!";
+                btn.classList.add('bg-green-600', 'text-white');
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.remove('bg-green-600', 'text-white');
+                }, 1500);
+            });
         }
 
         async function generateKey() {
@@ -134,9 +470,8 @@
             btn.disabled = true;
 
             const game = document.getElementById('game').value;
-            const maxDevices = document.getElementById('maxDevices').value;
-            const durationSelect = document.getElementById('duration');
-            const duration = durationSelect.value;
+            const maxDevices = maxDevicesInput.value;
+            const durationHours = parseInt(durationSelect.value);
             const pricePerDevice = parseFloat(durationSelect.options[durationSelect.selectedIndex].dataset.price);
             const totalPrice = pricePerDevice * maxDevices;
 
@@ -144,27 +479,34 @@
                 const res = await fetch(`${API_URL}/api/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ game, max_devices: parseInt(maxDevices), duration, price: totalPrice })
+                    body: JSON.stringify({ 
+                        game, 
+                        max_devices: parseInt(maxDevices), 
+                        duration_hours: durationHours, 
+                        price: totalPrice 
+                    })
                 });
 
                 const data = await res.json();
                 
                 if (data.success) {
-                    document.getElementById('resultBox').classList.remove('hidden');
-                    document.getElementById('keyText').innerText = data.key;
-                    document.getElementById('saldo').innerText = `$${data.new_balance.toLocaleString()}`;
+                    loadUser();   
+                    loadStats();  
+                    switchTab('keys'); 
                 } else {
                     alert("Error: " + data.error);
                 }
             } catch (err) {
                 alert("Server connection failed");
             } finally {
-                btn.innerText = "Generate Keys";
+                btn.innerText = "Generate Key Now";
                 btn.disabled = false;
             }
         }
 
         loadUser();
+        loadStats();
+        updatePrice();
     </script>
 </body>
 </html>
